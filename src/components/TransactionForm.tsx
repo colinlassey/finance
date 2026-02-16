@@ -27,27 +27,20 @@ type Props = {
   categories: Category[];
   suggestions: Suggestion[];
   onSubmit: () => void;
-  error: string;
 };
 
-export const TransactionForm = ({ draft, setDraft, editingId, accounts, categories, suggestions, onSubmit, error }: Props) => (
+export const TransactionForm = ({ draft, setDraft, editingId, accounts, categories, suggestions, onSubmit }: Props) => (
   <section className="card lg:col-span-4">
     <h2 className="section-title"><ArrowDownUp size={16} /> Transaction Entry</h2>
-    <form
-      className="mt-3 grid grid-cols-2 gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit();
-      }}
-    >
+    <div className="mt-3 grid grid-cols-2 gap-2">
       <input className="input" type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
       <select className="input" value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value as TxType })}>
         <option value="expense">Expense</option>
         <option value="income">Income</option>
         <option value="transfer">Transfer</option>
       </select>
-      <input className="input" type="number" step="0.01" placeholder="Amount" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} />
-      <input className="input" placeholder={draft.type === 'transfer' ? 'Memo (optional)' : 'Vendor'} value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} />
+      <input className="input" type="number" placeholder="Amount" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} />
+      <input className="input" placeholder="Vendor / Memo" value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} />
 
       {draft.type === 'transfer' ? (
         <>
@@ -65,7 +58,7 @@ export const TransactionForm = ({ draft, setDraft, editingId, accounts, categori
           <select className="input" value={draft.categoryId} onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}>
             <option value="">Category</option>
             {categories
-              .filter((c) => (draft.type === 'income' ? c.group === 'Income' : c.group !== 'Income'))
+              .filter((c) => draft.type === 'income' ? c.group === 'Income' : c.group !== 'Income')
               .map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select className="input" value={draft.accountId} onChange={(e) => setDraft({ ...draft, accountId: e.target.value })}>
@@ -74,10 +67,7 @@ export const TransactionForm = ({ draft, setDraft, editingId, accounts, categori
           </select>
         </>
       )}
-      <button className="btn col-span-2 mt-1" type="submit">{editingId ? 'Update' : 'Add'} Transaction</button>
-    </form>
-
-    {error ? <p className="mt-2 text-xs text-rose-300">{error}</p> : null}
+    </div>
 
     {draft.type !== 'transfer' && suggestions.length > 0 ? (
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -85,20 +75,20 @@ export const TransactionForm = ({ draft, setDraft, editingId, accounts, categori
           <button
             key={`${s.vendor}-${idx}`}
             className="rounded-full border border-zinc-700 px-2 py-1 hover:bg-zinc-800"
-            onClick={() =>
-              setDraft({
-                ...draft,
-                vendor: s.vendor,
-                categoryId: s.categoryId || draft.categoryId,
-                accountId: s.accountId || draft.accountId,
-              })
-            }
+            onClick={() => setDraft({
+              ...draft,
+              vendor: s.vendor,
+              categoryId: s.categoryId || draft.categoryId,
+              accountId: s.accountId || draft.accountId,
+            })}
           >
             {suggestionLabel(s, categories, accounts)}
           </button>
         ))}
       </div>
     ) : null}
+
+    <button className="btn mt-3 w-full" onClick={onSubmit}>{editingId ? 'Update' : 'Add'} Transaction</button>
   </section>
 );
 

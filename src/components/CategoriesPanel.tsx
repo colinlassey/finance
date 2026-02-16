@@ -1,4 +1,4 @@
-import { Tag, Plus, Trash2, Pencil } from 'lucide-react';
+import { Tag, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Category, CategoryGroup } from '../models/types';
 
@@ -12,9 +12,7 @@ type Props = {
 export const CategoriesPanel = ({ categories, onCreate, onRename, onDelete }: Props) => {
   const [name, setName] = useState('');
   const [group, setGroup] = useState<CategoryGroup>('Expense');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [renameDraft, setRenameDraft] = useState('');
-  const [replacementById, setReplacementById] = useState<Record<string, string>>({});
+  const [replacementId, setReplacementId] = useState('');
 
   return (
     <section className="card lg:col-span-4">
@@ -32,28 +30,18 @@ export const CategoriesPanel = ({ categories, onCreate, onRename, onDelete }: Pr
         {categories.map((c) => (
           <div className="row" key={c.id}>
             <div className="flex-1">
-              {editingId === c.id ? (
-                <div className="flex gap-2">
-                  <input className="input" value={renameDraft} onChange={(e) => setRenameDraft(e.target.value)} />
-                  <button className="icon-btn" onClick={() => { onRename(c.id, renameDraft); setEditingId(null); }}>Save</button>
-                </div>
-              ) : (
-                <>
-                  <div className="text-sm">{c.name}</div>
-                  <div className="text-xs text-zinc-500">{c.group || 'Expense'}</div>
-                </>
-              )}
+              <div className="text-sm">{c.name}</div>
+              <div className="text-xs text-zinc-500">{c.group || 'Expense'}</div>
             </div>
-            <button className="icon-btn" onClick={() => { setEditingId(c.id); setRenameDraft(c.name); }}><Pencil size={14} /></button>
-            <select
-              className="input max-w-36"
-              value={replacementById[c.id] || ''}
-              onChange={(e) => setReplacementById((prev) => ({ ...prev, [c.id]: e.target.value }))}
-            >
+            <button className="icon-btn" onClick={() => {
+              const next = prompt('Rename category', c.name);
+              if (next) onRename(c.id, next);
+            }}>Rename</button>
+            <select className="input max-w-36" value={replacementId} onChange={(e) => setReplacementId(e.target.value)}>
               <option value="">Reassign to…</option>
               {categories.filter((x) => x.id !== c.id).map((x) => <option value={x.id} key={x.id}>{x.name}</option>)}
             </select>
-            <button className="icon-btn" onClick={() => replacementById[c.id] && onDelete(c.id, replacementById[c.id])}><Trash2 size={14} /></button>
+            <button className="icon-btn" onClick={() => replacementId && onDelete(c.id, replacementId)}><Trash2 size={14} /></button>
           </div>
         ))}
       </div>
