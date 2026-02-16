@@ -9,21 +9,14 @@ type Suggestion = {
 };
 
 const recencyWeight = (dateStr: string) => {
-  const txDate = new Date(dateStr);
-  if (txDate >= daysAgo(30)) return 3;
-  if (txDate >= daysAgo(90)) return 2;
-  return 1;
+  const recentCutoff = daysAgo(90);
+  return new Date(dateStr) >= recentCutoff ? 2.5 : 1;
 };
 
-const vendorQueryWeight = (vendor: string, query: string) => {
-  if (!query) return 1.2;
-  const lower = vendor.toLowerCase();
-  if (lower.startsWith(query)) return 3;
-  if (lower.includes(query)) return 1.5;
-  return 0.2;
-};
-
-export const getVendorSuggestions = (transactions: Transaction[], query: string): Suggestion[] => {
+export const getVendorSuggestions = (
+  transactions: Transaction[],
+  query: string,
+): Suggestion[] => {
   const q = query.trim().toLowerCase();
   const scores = new Map<string, Suggestion>();
 
@@ -32,28 +25,21 @@ export const getVendorSuggestions = (transactions: Transaction[], query: string)
     const vendor = (tx.vendor || '').trim();
     if (!vendor) continue;
 
-    const score = recencyWeight(tx.date) * vendorQueryWeight(vendor, q);
+    const base = recencyWeight(tx.date) * (vendor.toLowerCase().includes(q) || !q ? 2 : 0.3);
     const key = `${vendor}::${tx.categoryId}::${tx.accountId}`;
     const existing = scores.get(key);
-
-    if (existing) {
-      existing.score += score;
-    } else {
+    if (existing) existing.score += base;
+    else {
       scores.set(key, {
         vendor,
         categoryId: tx.categoryId,
         accountId: tx.accountId,
-        score,
+        score: base,
       });
     }
   }
 
-  return [...scores.values()]
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return a.vendor.localeCompare(b.vendor);
-    })
-    .slice(0, 5);
+  return [...scores.values()].sort((a, b) => b.score - a.score).slice(0, 5);
 };
 
 export const suggestionLabel = (

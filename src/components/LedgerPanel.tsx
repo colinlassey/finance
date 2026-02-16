@@ -1,4 +1,4 @@
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { Account, Category, Transaction } from '../models/types';
 import { formatCurrency } from '../lib/format';
 
@@ -6,17 +6,15 @@ type Props = {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
-  visibleCount: number;
-  onLoadMore: () => void;
   onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
 };
 
-export const LedgerPanel = ({ transactions, accounts, categories, visibleCount, onLoadMore, onEdit, onDelete }: Props) => (
+export const LedgerPanel = ({ transactions, accounts, categories, onEdit, onDelete }: Props) => (
   <section className="card lg:col-span-8">
-    <h2 className="section-title">Ledger History (Infinite)</h2>
+    <h2 className="section-title">Ledger (Infinite History)</h2>
     <div className="mt-3 max-h-80 space-y-2 overflow-auto pr-2">
-      {transactions.slice(0, visibleCount).map((tx) => {
+      {transactions.map((tx) => {
         const isTransfer = tx.type === 'transfer';
         const desc = isTransfer
           ? `Transfer: ${accounts.find((a) => a.id === tx.fromAccountId)?.name || 'Unknown'} → ${accounts.find((a) => a.id === tx.toAccountId)?.name || 'Unknown'}`
@@ -39,11 +37,5 @@ export const LedgerPanel = ({ transactions, accounts, categories, visibleCount, 
         );
       })}
     </div>
-
-    {visibleCount < transactions.length ? (
-      <button className="btn mt-3 w-full" onClick={onLoadMore}><ChevronDown size={14} /> Load older transactions</button>
-    ) : (
-      <p className="mt-3 text-xs text-zinc-500">Showing full history ({transactions.length} transactions).</p>
-    )}
   </section>
 );
